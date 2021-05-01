@@ -330,11 +330,12 @@ WebPushLib.prototype.sendNotification = function(subscription, payload, options)
         httpsOptions.agent = requestDetails.agent;
       }
 
+      /*
       if (requestDetails.proxy) {
         const HttpsProxyAgent = require('https-proxy-agent'); // eslint-disable-line global-require
         httpsOptions.agent = new HttpsProxyAgent(requestDetails.proxy);
       }
-
+      */
       const pushRequest = https.request(httpsOptions, function(pushResponse) {
         let responseText = '';
 

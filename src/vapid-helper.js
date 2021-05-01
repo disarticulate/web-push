@@ -1,6 +1,6 @@
 'use strict';
 
-const crypto = require('crypto');
+const crypto = require('crypto-browserify');
 const urlBase64 = require('urlsafe-base64');
 const asn1 = require('asn1.js');
 const jws = require('jws');

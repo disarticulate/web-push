@@ -8,7 +8,7 @@ const WebPushConstants = require('./web-push-constants.js');
 
 const webPush = new WebPushLib();
 
-module.exports = {
+export default {
   WebPushError: WebPushError,
   supportedContentEncodings: WebPushConstants.supportedContentEncodings,
   encrypt: encryptionHelper.encrypt,
