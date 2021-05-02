@@ -4,6 +4,7 @@ module.exports = {
   entry: {
     main: path.resolve(__dirname, './src/index.js'),
   },
+  target: 'web',
   output: {
     path: path.resolve(__dirname, './dist'),
     filename: 'web-push-browser.js',
@@ -13,13 +14,11 @@ module.exports = {
       export: 'default',
     }
   },
-  externals: {
-    'crypto': 'crypto'
-  },
   plugins: [
     new webpack.ProvidePlugin({
       process: 'process/browser',
-      Buffer: ['buffer', 'Buffer']
+      Buffer: ['buffer', 'Buffer'],
+      crypto: 'crypto-browserify'
     })
   ],
   resolve: {
