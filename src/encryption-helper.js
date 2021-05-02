@@ -5,6 +5,7 @@ const ece = require('http_ece');
 const urlBase64 = require('urlsafe-base64');
 
 const encrypt = function(userPublicKey, userAuth, payload, contentEncoding) {
+  console.log('encrypt', userPublicKey, userAuth, payload, contentEncoding)
   if (!userPublicKey) {
     throw new Error('No user public key provided for encryption.');
   }
@@ -42,7 +43,6 @@ const encrypt = function(userPublicKey, userAuth, payload, contentEncoding) {
   const localPublicKey = localCurve.generateKeys();
 
   const salt = urlBase64.encode(crypto.randomBytes(16));
-
   const cipherText = ece.encrypt(payload, {
     version: contentEncoding,
     dh: userPublicKey,
@@ -50,7 +50,8 @@ const encrypt = function(userPublicKey, userAuth, payload, contentEncoding) {
     salt: salt,
     authSecret: userAuth
   });
-
+  
+  console.log(localCurve, localPublicKey, salt, payload, cipherText)
   return {
     localPublicKey: localPublicKey,
     salt: salt,

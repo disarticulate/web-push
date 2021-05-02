@@ -286,7 +286,7 @@ WebPushLib.prototype.generateRequestDetails = function(subscription, payload, op
     if (timeout) {
       requestDetails.timeout = timeout;
     }
-
+    console.warn('requestDetails', requestDetails)
     return requestDetails;
   };
 
@@ -304,77 +304,47 @@ WebPushLib.prototype.generateRequestDetails = function(subscription, payload, op
  * resolves if the sending of the notification was successful, otherwise it
  * rejects.
  */
+
 WebPushLib.prototype.sendNotification = function(subscription, payload, options) {
-    let requestDetails;
-    try {
-      requestDetails = this.generateRequestDetails(subscription, payload, options);
-    } catch (err) {
-      return Promise.reject(err);
+  let requestDetails;
+  try {
+    requestDetails = this.generateRequestDetails(subscription, payload, options);
+  } catch (err) {
+    return Promise.reject(err);
+  }
+  return new Promise(function(resolve, reject) {
+    const httpsOptions = {};
+    const urlParts = url.parse(requestDetails.endpoint);
+    httpsOptions.hostname = urlParts.hostname;
+    httpsOptions.port = urlParts.port;
+    httpsOptions.path = urlParts.path;
+
+    httpsOptions.headers = requestDetails.headers;
+    httpsOptions.method = requestDetails.method;
+
+    if (requestDetails.timeout) {
+      httpsOptions.timeout = requestDetails.timeout;
     }
 
-    return new Promise(function(resolve, reject) {
-      const httpsOptions = {};
-      const urlParts = url.parse(requestDetails.endpoint);
-      httpsOptions.hostname = urlParts.hostname;
-      httpsOptions.port = urlParts.port;
-      httpsOptions.path = urlParts.path;
+    if (requestDetails.agent) {
+      httpsOptions.agent = requestDetails.agent;
+    }
 
-      httpsOptions.headers = requestDetails.headers;
-      httpsOptions.method = requestDetails.method;
-
-      if (requestDetails.timeout) {
-        httpsOptions.timeout = requestDetails.timeout;
-      }
-
-      if (requestDetails.agent) {
-        httpsOptions.agent = requestDetails.agent;
-      }
-
-      /*
-      if (requestDetails.proxy) {
-        const HttpsProxyAgent = require('https-proxy-agent'); // eslint-disable-line global-require
-        httpsOptions.agent = new HttpsProxyAgent(requestDetails.proxy);
-      }
-      */
-      const pushRequest = https.request(httpsOptions, function(pushResponse) {
-        let responseText = '';
-
-        pushResponse.on('data', function(chunk) {
-          responseText += chunk;
-        });
-
-        pushResponse.on('end', function() {
-          if (pushResponse.statusCode < 200 || pushResponse.statusCode > 299) {
-            reject(new WebPushError(
-              'Received unexpected response code',
-              pushResponse.statusCode, pushResponse.headers, responseText, requestDetails.endpoint
-            ));
-          } else {
-            resolve({
-              statusCode: pushResponse.statusCode,
-              body: responseText,
-              headers: pushResponse.headers
-            });
-          }
-        });
+    fetch(requestDetails.endpoint, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: requestDetails.headers,
+      body: requestDetails.body
+    }).then(async (pushResponse) => {
+      resolve({
+        statusCode: pushResponse.statusCode,
+        body: await pushResponse.text(),
+        headers: pushResponse.headers
       });
-
-      if (requestDetails.timeout) {
-        pushRequest.on('timeout', function() {
-          pushRequest.destroy(new Error('Socket timeout'));
-        });
-      }
-
-      pushRequest.on('error', function(e) {
-        reject(e);
-      });
-
-      if (requestDetails.body) {
-        pushRequest.write(requestDetails.body);
-      }
-
-      pushRequest.end();
-    });
-  };
+    }).catch((e) => {
+      reject(e);
+    })
+  });
+};
 
 module.exports = WebPushLib;
